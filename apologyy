@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>⚽ عندنا اعتراف 😭</title>
+  <style>
+    body{margin:0;font-family:"Noto Kufi Arabic", Tahoma, Arial, sans-serif;background:radial-gradient(circle at center,#1e293b 0,#0b1220 80%);color:#f7f7fb;text-align:center;overflow:hidden}
+    h1{font-size:clamp(28px,5vw,52px);margin:22px 0}
+    h2{margin:10px 0;color:#00e676}
+    p{margin:10px auto;max-width:680px;font-size:18px;line-height:1.7;color:#d1d5db}
+    button{background:linear-gradient(90deg,#ff2d2d,#ff6b6b);border:none;color:white;padding:12px 20px;border-radius:12px;cursor:pointer;font-size:18px;font-weight:700;box-shadow:0 10px 25px rgba(0,0,0,.4);transition:.2s}
+    button:hover{transform:scale(1.05)}
+    .confetti{position:fixed;top:0;left:0;width:100vw;height:100vh;pointer-events:none;overflow:hidden;z-index:1}
+    .piece{position:absolute;width:10px;height:14px;border-radius:2px;opacity:.9;mix-blend-mode:screen}
+    .ticker{margin-top:20px;padding-top:10px;border-top:1px dashed rgba(255,255,255,.3);font-size:16px;color:#9aa4b2}
+    @keyframes fall{to{transform:translateY(100vh) rotate(720deg);opacity:0}}
+
+    /* word dots */
+    #word{position:fixed;inset:0;pointer-events:none;z-index:2}
+    .dot{position:absolute;width:8px;height:8px;border-radius:50%;background:#fff;box-shadow:0 0 12px #fff, 0 0 28px #4ade80;opacity:0}
+    @keyframes flyin{0%{transform:translate(var(--sx), var(--sy)) scale(.6);opacity:0}60%{opacity:1}100%{transform:translate(0,0) scale(1);opacity:1}}
+
+    .note{margin:18px auto 0;display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border:1px solid rgba(255,255,255,.15);border-radius:999px;background:rgba(255,255,255,.06);color:#e5e7eb;font-weight:700}
+
+    /* --- Sad mode additions --- */
+    .overlay-dark{position:fixed;inset:0;background:radial-gradient(1200px 800px at 50% -10%, transparent 0, rgba(0,0,0,.6) 60%, rgba(0,0,0,.85) 100%);z-index:2;pointer-events:none;opacity:0;transition:opacity .4s ease}
+    body.sad{background:radial-gradient(circle at center,#0b0e16 0,#05070e 80%)}
+    body.sad .overlay-dark{opacity:1}
+
+    .hearts,.tears{position:fixed;inset:0;pointer-events:none;z-index:4}
+    .heart,.tear{position:absolute;opacity:.95;filter:drop-shadow(0 2px 6px rgba(0,0,0,.5))}
+    .heart{width:22px;height:22px}
+    .tear{width:8px;height:14px;border-radius:4px;background:linear-gradient(#60a5fa,#1d4ed8)}
+    @keyframes drop{to{transform:translateY(110vh) rotate(360deg);opacity:.8}}
+    @keyframes tearfall{to{transform:translateY(110vh);opacity:.9}}
+
+    .shake{animation:shaky .9s ease-in-out infinite}
+    @keyframes shaky{10%,90%{transform:translate3d(-1px,0,0)}20%,80%{transform:translate3d(2px,0,0)}30%,50%,70%{transform:translate3d(-4px,0,0)}40%,60%{transform:translate3d(4px,0,0)}}
+
+    .nooo{position:fixed;left:0;right:0;top:18%;text-align:center;font-size:clamp(24px,5vw,46px);font-weight:900;color:#fee2e2;text-shadow:0 4px 18px rgba(239,68,68,.55);opacity:0;z-index:5;transition:opacity .25s ease}
+    body.sad .nooo{opacity:1}
+  </style>
+</head>
+<body>
+  <h1>عندنا اعتراف 😭</h1>
+  <h2>الشيت ما خلص اليوم 😬</h2>
+  <p> والله حاولنا، بس صار في دراما بالشيت واحنا الضحية!<br>جهزنا صفحة اعتذار رسمية فيها شوية نكت، وشوية حب ❤️😂</p>
+
+  <p style="margin-top:20px;font-weight:bold;color:#ff2d2d;font-size:22px">ليفربول فاز... بس نحنا خسرنا ضد الشيت 🧾⚽</p>
+
+  <button id="btn">سامحتنا؟ 😭💚</button>
+  <button id="btnNo">ما سامحتنا؟ 😤</button>
+
+  <div class="note">🥔 سامحنا وما بنخليك تنام وانت جوعان ☕💚</div>
+
+  <div class="ticker">
+    <marquee scrollamount="8">⚡ آخر الأخبار: الشيت ما خلص... الفريق بحالة حزن جماعي • الإكسل يرفض التعليق • وعود رسمية بالتعويض والدونات 😂🍩</marquee>
+  </div>
+
+  <div class="confetti" id="confetti"></div>
+  <div id="word"></div>
+
+  <!-- Sad mode layers -->
+  <div class="overlay-dark" id="overlay"></div>
+  <div class="hearts" id="hearts"></div>
+  <div class="tears" id="tears"></div>
+  <div class="nooo">لااااااااااااااااااااااااااا</div>
+
+  <script>
+    const btn=document.getElementById('btn');
+    const btnNo=document.getElementById('btnNo');
+    const conf=document.getElementById('confetti');
+    const word=document.getElementById('word');
+    const hearts=document.getElementById('hearts');
+    const tears=document.getElementById('tears');
+
+    function confettiRain(n=100){
+      for(let i=0;i<n;i++){
+        const p=document.createElement('div');
+        p.className='piece';
+        p.style.background=`hsl(${Math.random()*360},90%,60%)`;
+        p.style.left=Math.random()*100+'vw';
+        p.style.top='-20px';
+        p.style.animation=`fall ${3+Math.random()*3}s linear forwards`;
+        conf.appendChild(p);
+        setTimeout(()=>p.remove(),6000);
+      }
+    }
+
+    // Render a word using offscreen canvas sampling -> glowing dots that fly in
+    function formWordText(txt){
+      word.innerHTML='';
+
+      const vw = Math.max(document.documentElement.clientWidth, window.innerWidth||0);
+      const vh = Math.max(document.documentElement.clientHeight, window.innerHeight||0);
+
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      const pad = 20;
+      const baseW = Math.min(1000, Math.floor(vw*0.75));
+      const baseH = 220;
+      canvas.width = baseW; canvas.height = baseH;
+
+      ctx.clearRect(0,0,baseW,baseH);
+      ctx.fillStyle = '#fff';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.font = '900 150px Arial, Helvetica, sans-serif';
+      // shrink font if too wide
+      let size = 150; let metrics = ctx.measureText(txt);
+      while(metrics.width > baseW - 2*pad && size>40){
+        size -= 6; ctx.font = `900 ${size}px Arial, Helvetica, sans-serif`; metrics = ctx.measureText(txt);
+      }
+      ctx.shadowColor = 'rgba(74,222,128,.9)';
+      ctx.shadowBlur = 16;
+      ctx.fillText(txt, baseW/2, baseH/2);
+
+      const img = ctx.getImageData(0,0,baseW,baseH).data;
+      const step = 8; // density of dots
+      const originX = (vw - baseW)/2;
+      const originY = vh*0.28;
+
+      for(let y=0; y<baseH; y+=step){
+        for(let x=0; x<baseW; x+=step){
+          const i = (y*baseW + x)*4 + 3; // alpha channel
+          if(img[i] > 100){
+            const d=document.createElement('div');
+            d.className='dot';
+            d.style.left = (originX + x) + 'px';
+            d.style.top  = (originY + y) + 'px';
+            const sx = (Math.random()*2-1)*vw*0.6;
+            const sy = (-Math.random()*vh*0.8)-60;
+            d.style.setProperty('--sx', sx+'px');
+            d.style.setProperty('--sy', sy+'px');
+            d.style.animation = `flyin ${700+Math.random()*900}ms cubic-bezier(.2,.7,.1,1) forwards`;
+            word.appendChild(d);
+          }
+        }
+      }
+    }
+
+    // --- Sad mode (looping until forgiven) ---
+    let sadMode=false, heartTimer=null, tearTimer=null, audioCtx=null, droneNode=null;
+
+    function startSad(){
+      if(sadMode) return; sadMode=true;
+      document.body.classList.add('sad');
+      document.body.classList.add('shake');
+
+      // falling broken hearts
+      heartTimer = setInterval(()=>{
+        const h=document.createElement('div'); h.className='heart';
+        h.style.left = Math.random()*100+'vw'; h.style.top='-24px';
+        h.innerHTML = `<svg width="22" height="22" viewBox="0 0 24 24" fill="#ef4444" xmlns="http://www.w3.org/2000/svg"><path d="M12 21s-5.5-3.3-8.2-6C1.8 12.9 2 9.4 4.4 7.6 6.5 6 9.2 6.5 10.8 8.3l.2.3-1.8 2.7 2.2 1.2-1.2 3.1 2.6-2 .8-3.2-2.1-1.7C13 5.9 16.7 5.4 19 7.3c2.5 2.1 2.7 5.6.2 7.8C17.5 17.8 12 21 12 21z"/></svg>`;
+        h.style.animation = `drop ${4+Math.random()*3}s linear forwards`;
+        hearts.appendChild(h); setTimeout(()=>h.remove(), 8000);
+      }, 120);
+
+      // raining tears
+      tearTimer = setInterval(()=>{
+        const t=document.createElement('div'); t.className='tear';
+        t.style.left = Math.random()*100+'vw'; t.style.top='-30px';
+        t.style.animation = `tearfall ${2.5+Math.random()*2.5}s linear forwards`;
+        tears.appendChild(t); setTimeout(()=>t.remove(), 6000);
+      }, 100);
+
+      // sad violin-ish drone through WebAudio
+      try{
+        audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+        const o1 = audioCtx.createOscillator();
+        const o2 = audioCtx.createOscillator();
+        const g  = audioCtx.createGain();
+        o1.type='sawtooth'; o2.type='triangle';
+        o1.frequency.value=440; o2.frequency.value=660; // moody 5th
+        const lfo = audioCtx.createOscillator(); const lfoGain = audioCtx.createGain();
+        lfo.frequency.value=4; lfoGain.gain.value=8; lfo.connect(lfoGain); lfoGain.connect(o1.frequency);
+        const gLfo = audioCtx.createOscillator(); const gLfoGain = audioCtx.createGain();
+        gLfo.frequency.value=0.3; gLfoGain.gain.value=0.15; gLfo.connect(gLfoGain); gLfoGain.connect(g.gain);
+        g.gain.value=0.0;
+        o1.connect(g); o2.connect(g); g.connect(audioCtx.destination);
+        o1.start(); o2.start(); lfo.start(); gLfo.start();
+        const now=audioCtx.currentTime; g.gain.linearRampToValueAtTime(0.12, now+2);
+        droneNode={stop:()=>{try{o1.stop();o2.stop();lfo.stop();gLfo.stop();}catch(e){} g.disconnect(); audioCtx.close();}};
+      }catch(e){ console.warn('Audio init failed', e); }
+    }
+
+    function stopSad(){
+      if(!sadMode) return; sadMode=false;
+      document.body.classList.remove('sad');
+      document.body.classList.remove('shake');
+      clearInterval(heartTimer); clearInterval(tearTimer);
+      heartTimer=null; tearTimer=null;
+      hearts.innerHTML=''; tears.innerHTML='';
+      if(droneNode){ droneNode.stop(); droneNode=null; }
+    }
+
+    // Buttons
+    btn.onclick=()=>{
+      stopSad();
+      confettiRain(220);
+      setTimeout(()=>formWordText('KHALEEL ❤'), 380);
+    };
+
+    btnNo.onclick=()=>{ startSad(); };
+
+    // small entrance confetti
+    setTimeout(()=>confettiRain(80),500);
+  </script>
+</body>
+</html>
